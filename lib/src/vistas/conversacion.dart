@@ -1,36 +1,29 @@
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 import 'package:traductor_tseltal/colores/paleta_de_colores.dart';
+import 'package:traductor_tseltal/src/controladores/conversacion_controller.dart';
 import 'package:traductor_tseltal/src/vistas/cabecera.dart';
 
 class ChatView extends StatelessWidget {
+  final ConversacionController controller = Get.put(ConversacionController());
+
   @override
   Widget build(BuildContext context) {
-    final messages = [
-      {'content': 'B\'atzi lek me? ¿Cómo estás?', 'isTseltal': true},
-      {'content': 'Blen y to como estos?, Lek, q\'e\'et san?', 'isTseltal': false},
-      {'content': 'Lek xan, wokoi\' t-at Bien también gracias', 'isTseltal': true},
-      {'content': '¡Bonti b\'at ye\'e!, ¡A dónde vas?', 'isTseltal': true},
-      {'content': 'Voy a la milpa Bi\'un te c\'slhk', 'isTseltal': false},
-      {'content': '¡let ayi! Te k\'an jal jbaths J\'bel c\'met Ao\' nos vemos. Goypnet!', 'isTseltal': true},
-    ];
-
     return Column(
       children: [
-        AppHeader(
-          title: 'Conversación voz a voz\nK\'opojel',
-        ),
+        AppHeader(title: 'Conversación Médica\nK\'opojel'),
         Expanded(
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8),
-            child: ListView.builder(
-              itemCount: messages.length,
+            child: Obx(() => ListView.builder(
+              itemCount: controller.messages.length,
               itemBuilder: (context, index) {
                 return _buildChatBubble(
-                  messages[index]['content'] as String,
-                  messages[index]['isTseltal'] as bool,
+                  controller.messages[index]['content'] as String,
+                  controller.messages[index]['isTseltal'] as bool,
                 );
               },
-            ),
+            )),
           ),
         ),
         _buildVoiceControlArea(),
@@ -45,7 +38,7 @@ class ChatView extends StatelessWidget {
         margin: EdgeInsets.symmetric(vertical: 6),
         padding: EdgeInsets.symmetric(horizontal: 16, vertical: 10),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: isTseltal ? Colors.white : kPrimaryColor.withOpacity(0.1),
           borderRadius: BorderRadius.circular(16),
           boxShadow: [BoxShadow(color: Colors.black12, blurRadius: 4)],
         ),
@@ -57,32 +50,34 @@ class ChatView extends StatelessWidget {
   Widget _buildVoiceControlArea() {
     return Container(
       padding: EdgeInsets.symmetric(horizontal: 16, vertical: 24),
-      color: Colors.transparent, // Toma el fondo beige claro general
+      color: Colors.transparent,
       child: Row(
-        mainAxisAlignment: MainAxisAlignment.center, // Botón completamente centrado
+        mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          _buildMicrophoneButton(), 
-        ],
-      ),
-    );
-  }
-
-  Widget _buildMicrophoneButton() {
-    return Container(
-      height: 80,
-      width: 80,
-      decoration: BoxDecoration(
-        color: kPrimaryColor, // Botón con el verde principal del logo
-        shape: BoxShape.circle,
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black26,
-            blurRadius: 10,
-            offset: Offset(0, 4),
+          GestureDetector(
+            onTap: controller.toggleListening,
+            child: Obx(() => Container(
+              height: controller.isListening.value ? 90 : 80,
+              width: controller.isListening.value ? 90 : 80,
+              decoration: BoxDecoration(
+                // Cambia de color a magenta cuando está escuchando
+                color: controller.isListening.value ? kAccentColor : kPrimaryColor,
+                shape: BoxShape.circle,
+                boxShadow: [
+                  BoxShadow(color: Colors.black26, blurRadius: 10, offset: Offset(0, 4)),
+                ],
+              ),
+              child: Center(
+                child: Icon(
+                  controller.isListening.value ? Icons.graphic_eq : Icons.mic, 
+                  color: kTextPrimary, 
+                  size: 36
+                )
+              ),
+            )),
           ),
         ],
       ),
-      child: Center(child: Icon(Icons.mic, color: kTextPrimary, size: 36)),
     );
   }
 }
