@@ -5,41 +5,52 @@ import 'package:traductor_tseltal/src/controladores/traductor_controller.dart';
 import 'package:traductor_tseltal/src/vistas/cabecera.dart';
 
 class TranslationView extends StatelessWidget {
-  // Inyectamos el controlador
   final TraductorController controller = Get.put(TraductorController());
 
   @override
   Widget build(BuildContext context) {
     return Column(
       children: [
-        AppHeader(title: 'Traductor de Texto'), 
+        AppHeader(title: 'Traductor de Texto'),
         Expanded(
-          child: SingleChildScrollView(
-            child: Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Obx(() => Column(
-                children: [
-                  _buildInputBox(
-                    title: controller.isTseltalToSpanish.value ? 'Tseltal' : 'Español',
+          // LayoutBuilder nos permite conocer el tamaño disponible en la pantalla
+          child: LayoutBuilder(
+            builder: (context, constraints) {
+              return SingleChildScrollView(
+                child: ConstrainedBox(
+                  // Forzamos a que el contenido mínimo sea del alto de la pantalla restante
+                  constraints: BoxConstraints(
+                    minHeight: constraints.maxHeight,
                   ),
-                  SizedBox(height: 12),
-                  _buildLanguageSwitcher(),
-                  SizedBox(height: 12),
-                  _buildResultBox(
-                    title: controller.isTseltalToSpanish.value ? 'Español' : 'Tseltal',
+                  child: Padding(
+                    padding: const EdgeInsets.all(16.0),
+                    child: Obx(() => Column(
+                      mainAxisAlignment: MainAxisAlignment.center, // Centrado vertical absoluto
+                      children: [
+                        _buildInputBox(
+                          title: controller.isTseltalToSpanish.value ? 'Tseltal' : 'Español',
+                        ),
+                        SizedBox(height: 16),
+                        _buildLanguageSwitcher(),
+                        SizedBox(height: 16),
+                        _buildResultBox(
+                          title: controller.isTseltalToSpanish.value ? 'Español' : 'Tseltal',
+                        ),
+                      ],
+                    )),
                   ),
-                ],
-              )),
-            ),
+                ),
+              );
+            },
           ),
         ),
       ],
     );
   }
 
-  // Caja superior: Permite ingresar el texto libremente
   Widget _buildInputBox({required String title}) {
     return Container(
+      width: double.infinity, // Asegura que ocupe todo el ancho
       padding: EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: Colors.white,
@@ -81,9 +92,7 @@ class TranslationView extends StatelessWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.end,
             children: [
-              _buildActionIcon(Icons.mic_outlined, onTap: () {
-                // Aquí irá el disparador de voz a texto más adelante
-              }),
+              _buildActionIcon(Icons.mic_outlined, onTap: () {}),
             ],
           ),
         ],
@@ -91,11 +100,10 @@ class TranslationView extends StatelessWidget {
     );
   }
 
-  // Caja inferior: Muestra el resultado reactivo
   Widget _buildResultBox({required String title}) {
     return Container(
-      padding: EdgeInsets.all(16),
       width: double.infinity,
+      padding: EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
@@ -130,9 +138,12 @@ class TranslationView extends StatelessWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.end,
             children: [
-              _buildActionIcon(Icons.volume_up, onTap: () {
-                // Lógica de text-to-speech
-              }),
+              // Condición: Aparece solo si es Español a Tseltal y hay texto
+              if (!controller.isTseltalToSpanish.value && controller.translatedText.value.isNotEmpty) ...[
+                _buildActionIcon(Icons.lightbulb_outline, onTap: controller.showGrammarExplanation),
+                SizedBox(width: 8),
+              ],
+              _buildActionIcon(Icons.volume_up, onTap: () {}),
               SizedBox(width: 8),
               _buildActionIcon(Icons.content_copy_outlined, onTap: controller.copyToClipboard),
             ],
@@ -142,7 +153,6 @@ class TranslationView extends StatelessWidget {
     );
   }
 
-  // Iconos de acción interactivos
   Widget _buildActionIcon(IconData icon, {VoidCallback? onTap}) {
     return GestureDetector(
       onTap: onTap,
@@ -157,7 +167,6 @@ class TranslationView extends StatelessWidget {
     );
   }
 
-  // Botón central para cambiar idiomas
   Widget _buildLanguageSwitcher() {
     return GestureDetector(
       onTap: controller.swapLanguages,
@@ -172,22 +181,14 @@ class TranslationView extends StatelessWidget {
           children: [
             Text(
               controller.isTseltalToSpanish.value ? 'Tseltal' : 'Español',
-              style: TextStyle(
-                color: kTextPrimary,
-                fontSize: 14,
-                fontWeight: FontWeight.bold,
-              ),
+              style: TextStyle(color: kTextPrimary, fontSize: 14, fontWeight: FontWeight.bold),
             ),
             SizedBox(width: 16),
             Icon(Icons.swap_horiz, color: kTextPrimary, size: 20),
             SizedBox(width: 16),
             Text(
               controller.isTseltalToSpanish.value ? 'Español' : 'Tseltal',
-              style: TextStyle(
-                color: kTextPrimary,
-                fontSize: 14,
-                fontWeight: FontWeight.bold,
-              ),
+              style: TextStyle(color: kTextPrimary, fontSize: 14, fontWeight: FontWeight.bold),
             ),
           ],
         ),
